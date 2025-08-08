@@ -83,10 +83,10 @@ const LottieCountdown: React.FC<{ onComplete: () => void }> = ({ onComplete }) =
       backdropFilter: 'blur(2px)'
     }}>
       <iframe
-        src="data:text/html;charset=utf-8,%3Chtml%3E%3Chead%3E%3Cscript src='https://unpkg.com/@lottiefiles/dotlottie-wc@0.6.2/dist/dotlottie-wc.js' type='module'%3E%3C/script%3E%3C/head%3E%3Cbody style='margin:0;padding:0;background:transparent;display:flex;justify-content:center;align-items:center;height:100vh;'%3E%3Cdotlottie-wc src='https://lottie.host/e5113891-a79e-4395-a656-76372b815e5c/0kJGXH5ssH.lottie' style='width: 500px;height: 500px' speed='1' autoplay%3E%3C/dotlottie-wc%3E%3C/body%3E%3Cscript%3Edocument.querySelector('dotlottie-wc').addEventListener('complete', () => %7B parent.postMessage('lottie-complete', '*'); %7D);%3C/script%3E%3C/body%3E%3C/html%3E"
+        src="data:text/html;charset=utf-8,%3Chtml%3E%3Chead%3E%3Cscript src='https://unpkg.com/@lottiefiles/dotlottie-wc@0.6.2/dist/dotlottie-wc.js' type='module'%3E%3C/script%3E%3C/head%3E%3Cbody style='margin:0;padding:0;background:transparent;display:flex;justify-content:center;align-items:center;height:100vh;'%3E%3Cdotlottie-wc src='https://lottie.host/e5113891-a79e-4395-a656-76372b815e5c/0kJGXH5ssH.lottie' style='width: 1000px;height: 1000px' speed='1' autoplay%3E%3C/dotlottie-wc%3E%3C/body%3E%3Cscript%3Edocument.querySelector('dotlottie-wc').addEventListener('complete', () => %7B parent.postMessage('lottie-complete', '*'); %7D);%3C/script%3E%3C/body%3E%3C/html%3E"
         style={{
-          width: '500px',
-          height: '500px',
+          width: '1000px',
+          height: '1000px',
           border: 'none',
           background: 'transparent'
         }}
