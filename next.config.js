@@ -7,4 +7,5 @@ module.exports = {
   env: {
     CUSTOM_API_URL: process.env.CUSTOM_API_URL, // Example of adding environment variables
   },
+  
 };

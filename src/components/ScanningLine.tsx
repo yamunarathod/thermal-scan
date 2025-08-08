@@ -1,24 +1,25 @@
-import React from 'react';
+import React from "react";
 
-const ScanningLine: React.FC = () => {
-  return (
-    <div className="absolute top-0 left-0 w-full h-full overflow-hidden rounded-lg pointer-events-none">
-      <div
-        className="absolute w-full h-1.5 bg-red-500/80 shadow-[0_0_18px_7px_rgba(255,0,0,0.7)]"
-        style={{ animation: 'scan 4s linear infinite' }}
-      ></div>
-      <style jsx>{`
-        @keyframes scan {
-          0% {
-            top: 0%;
-          }
-          100% {
-            top: 100%;
-          }
-        }
-      `}</style>
-    </div>
-  );
-};
+const ScanningLine: React.FC = () => (
+  <div className="scanning-line">
+    <style>{`
+      .scanning-line {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: rgba(0, 255, 255, 0.8);
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        z-index: 20;
+        animation: scan 3s linear 1; /* Run once */
+      }
+      @keyframes scan {
+        0% { top: 0; }
+        100% { top: 100%; }
+      }
+    `}</style>
+  </div>
+);
 
 export default ScanningLine;
