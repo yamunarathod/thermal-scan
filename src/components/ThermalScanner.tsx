@@ -178,27 +178,37 @@ const ThermalScanner: React.FC = () => {
       }
       lastVideoTime = video.currentTime;
       
-      const displayWidth = canvas.clientWidth;
-      const displayHeight = canvas.clientHeight;
-      canvas.width = displayWidth;
-      canvas.height = displayHeight;
+      // Set canvas size to match its display size
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
       
-      const canvasRatio = displayWidth / displayHeight;
-      const videoRatio = video.videoWidth / video.videoHeight;
-      let drawWidth, drawHeight, x, y;
-
-      if (canvasRatio > videoRatio) {
-        drawWidth = displayWidth;
-        drawHeight = displayWidth / videoRatio;
-        x = 0;
-        y = (displayHeight - drawHeight) / 2;
-      } else {
-        drawHeight = displayHeight;
-        drawWidth = displayHeight * videoRatio;
-        x = (displayWidth - drawWidth) / 2;
-        y = 0;
-      }
-      ctx.drawImage(video, x, y, drawWidth, drawHeight);
+      // Clear the canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Scale to fill height (vertical priority) - crop sides if needed
+      const videoAspectRatio = video.videoWidth / video.videoHeight;
+      const canvasAspectRatio = canvas.width / canvas.height;
+      
+      let drawWidth, drawHeight, offsetX, offsetY;
+      
+      // Always fit by height to fill the vertical space completely
+      drawHeight = canvas.height;
+      drawWidth = drawHeight * videoAspectRatio;
+      
+      // Center horizontally (may crop sides if video is too wide)
+      offsetX = (canvas.width - drawWidth) / 2;
+      offsetY = 0;
+      
+      // Apply horizontal flip transform for mirroring
+      ctx.save();
+      ctx.scale(-1, 1);
+      ctx.translate(-canvas.width, 0);
+      
+      // Draw the video frame
+      ctx.drawImage(video, offsetX, offsetY, drawWidth, drawHeight);
+      
+      ctx.restore();
 
       const now = Date.now();
       const elapsed = now - phaseStartTime.current;
@@ -290,10 +300,9 @@ const ThermalScanner: React.FC = () => {
       }
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-            width: { ideal: WIDTH },
-            height: { ideal: HEIGHT },
             facingMode: "user",
-            aspectRatio: ASPECT_RATIO,
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
         },
       });
       streamRef.current = stream;
@@ -368,7 +377,7 @@ const ThermalScanner: React.FC = () => {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          transform: scaleX(-1); /* Flip horizontally to mirror the user */
+          background: black;
         }
         .frame-overlay {
           position: absolute;
