@@ -7,13 +7,15 @@ interface ResultScreenProps {
 
 const ResultScreen: React.FC<ResultScreenProps> = ({ message, isCool }) => (
   <div className="result-container">
-    <img
-      src={isCool ? "./images/cool.png" : "./images/hot.png"}
-      alt={isCool ? "Cool result" : "Hot result"}
-      className="result-image"
+    <video
+      src={isCool ? "./videos/cool.mp4" : "./videos/hot.mp4"}
+      className="result-video"
+      autoPlay
+      loop
+      muted
+      playsInline
     />
     <div className="message-overlay">
-      <p>{message}</p>
     </div>
     <style>{`
       .result-container {
@@ -25,7 +27,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ message, isCool }) => (
         justify-content: center;
         background: black;
       }
-      .result-image {
+      .result-video {
         width: 100vw;
         height: 100vh;
         object-fit: cover;
@@ -35,10 +37,19 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ message, isCool }) => (
         z-index: 10;
       }
       .message-overlay {
-       
+        position: relative;
+        z-index: 20;
+        text-align: center;
+        color: white;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
       }
       .message-overlay p {
-     
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 0;
+        padding: 20px;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 10px;
       }
     `}</style>
   </div>
