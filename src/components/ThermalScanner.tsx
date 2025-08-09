@@ -108,6 +108,7 @@ const ThermalScanner: React.FC = () => {
   const [faceLandmarker, setFaceLandmarker] = useState<FaceLandmarker | null>(null);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [thermalProgress, setThermalProgress] = useState<number>(0);
+  const [temperature, setTemperature] = useState<string | null>(null);
 
   const animationFrameId = useRef<number | undefined>(undefined);
   const phaseStartTime = useRef<number>(0);
@@ -116,34 +117,46 @@ const ThermalScanner: React.FC = () => {
   useEffect(() => {
     phaseStartTime.current = Date.now();
     
-    // After scanning down, hold the thermal effect
     if (phase === 'scanDown') {
-      const timer = setTimeout(() => setPhase('thermalHoldAfterDown'), 3000); // 3-second scan
+      const timer = setTimeout(() => setPhase('thermalHoldAfterDown'), 3000);
       return () => clearTimeout(timer);
     }
 
-    // After the thermal hold, scan back up
     if (phase === 'thermalHoldAfterDown') {
-      const timer = setTimeout(() => setPhase('scanUp'), 3000); // 3-second thermal hold
+      const timer = setTimeout(() => setPhase('scanUp'), 3000);
       return () => clearTimeout(timer);
     }
 
-    // After scanning up, hold the thermal effect again
     if (phase === 'scanUp') {
-      const timer = setTimeout(() => setPhase('thermalHoldAfterUp'), 3000); // 3-second scan
+      const timer = setTimeout(() => setPhase('thermalHoldAfterUp'), 3000);
       return () => clearTimeout(timer);
     }
     
-    // After the final thermal hold, show the result
     if (phase === 'thermalHoldAfterUp') {
-        const timer = setTimeout(() => {
-            const cool = Math.random() < 0.9;
-            setIsCool(cool);
-            setResult(cool ? "Cool vibes detected. Come on in!" : "Whoa, you're on fire — cool down and try again!");
+        // Decide the outcome at the beginning of this phase
+        const cool = Math.random() < 0.9;
+        setIsCool(cool);
+        setResult(cool ? "Cool vibes detected. Come on in!" : "Whoa, you're on fire — cool down and try again!");
+
+        // ✨ NEW: Delay the appearance of the temperature by 1 second
+        const tempTimer = setTimeout(() => {
+            const tempValue = cool
+              ? (Math.random() * 10 + 80).toFixed(1) // 80.0 to 90.0
+              : (Math.random() * 10 + 90).toFixed(1); // 90.0 to 100.0
+            setTemperature(`${tempValue}°`);
+        }, 1000); // 1-second delay
+
+        // Hold this phase for 3 seconds before moving to the result
+        const phaseTimer = setTimeout(() => {
             setPhase('result');
             stopCamera();
-        }, 2000); // 2-second final thermal hold
-        return () => clearTimeout(timer);
+        }, 3000);
+        
+        // Ensure both timers are cleared on cleanup
+        return () => {
+            clearTimeout(tempTimer);
+            clearTimeout(phaseTimer);
+        };
     }
   }, [phase]);
   
@@ -165,35 +178,43 @@ const ThermalScanner: React.FC = () => {
       }
       lastVideoTime = video.currentTime;
       
-      // Set canvas size to match display size, not video native size
       const displayWidth = canvas.clientWidth;
       const displayHeight = canvas.clientHeight;
       canvas.width = displayWidth;
       canvas.height = displayHeight;
       
-      // Draw the video to the canvas, maintaining aspect ratio
-      ctx.drawImage(video, 0, 0, displayWidth, displayHeight);
+      const canvasRatio = displayWidth / displayHeight;
+      const videoRatio = video.videoWidth / video.videoHeight;
+      let drawWidth, drawHeight, x, y;
 
-      // Calculate thermal progress based on current phase and time
+      if (canvasRatio > videoRatio) {
+        drawWidth = displayWidth;
+        drawHeight = displayWidth / videoRatio;
+        x = 0;
+        y = (displayHeight - drawHeight) / 2;
+      } else {
+        drawHeight = displayHeight;
+        drawWidth = displayHeight * videoRatio;
+        x = (displayWidth - drawWidth) / 2;
+        y = 0;
+      }
+      ctx.drawImage(video, x, y, drawWidth, drawHeight);
+
       const now = Date.now();
       const elapsed = now - phaseStartTime.current;
       
       let currentThermalProgress = 0;
       
       if (phase === 'thermalHoldAfterDown') {
-        // Gradual increase over 3 seconds
         currentThermalProgress = Math.min(1, elapsed / 3000);
       } else if (phase === 'thermalHoldAfterUp') {
-        // Gradual increase over 2 seconds
-        currentThermalProgress = Math.min(1, elapsed / 2000);
+        currentThermalProgress = Math.min(1, elapsed / 3000);
       } else if (phase === 'result') {
-        // Gradual decrease over 1 second
         currentThermalProgress = Math.max(0, 1 - (elapsed / 1000));
       }
       
       setThermalProgress(currentThermalProgress);
 
-      // Apply thermal effect with gradual progression
       const isThermalPhase = phase === 'thermalHoldAfterDown' || phase === 'thermalHoldAfterUp' || phase === 'result';
       if (isThermalPhase && currentThermalProgress > 0) {
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -202,7 +223,6 @@ const ThermalScanner: React.FC = () => {
           const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
           const [thermalR, thermalG, thermalB] = getThermalColor(gray);
           
-          // Blend between original and thermal colors based on progress
           data[i] = Math.floor(data[i] * (1 - currentThermalProgress) + thermalR * currentThermalProgress);
           data[i + 1] = Math.floor(data[i + 1] * (1 - currentThermalProgress) + thermalG * currentThermalProgress);
           data[i + 2] = Math.floor(data[i + 2] * (1 - currentThermalProgress) + thermalB * currentThermalProgress);
@@ -210,7 +230,6 @@ const ThermalScanner: React.FC = () => {
         ctx.putImageData(imageData, 0, 0);
       }
       
-      // Face detection logic to start the process
       if (phase === 'idle' && faceLandmarker) {
         const detectionResult = faceLandmarker.detectForVideo(video, performance.now());
         if (detectionResult.faceLandmarks && detectionResult.faceLandmarks.length > 0) {
@@ -232,6 +251,7 @@ const ThermalScanner: React.FC = () => {
     const restartTimeout = setTimeout(() => {
       setResult(null);
       setIsCool(false);
+      setTemperature(null);
       setPhase('idle');
       setThermalProgress(0);
       startCamera();
@@ -319,12 +339,13 @@ const ThermalScanner: React.FC = () => {
       {phase === 'countdown' && <LottieCountdown onComplete={handleCountdownComplete} />}
       <div className="camera-wrapper">
         <canvas ref={canvasRef} className="camera-canvas" />
-        <video ref={videoRef} autoPlay playsInline muted style={{ transform: "scaleX(-1)", display: "none" }} />
+        <video ref={videoRef} autoPlay playsInline muted style={{ display: "none" }} />
         <img src="./images/frame.png" className="frame-overlay" alt="Frame overlay" />
         {!isCameraReady && <StatusText>Initializing Camera...</StatusText>}
         {isCameraReady && phase === 'idle' && <StatusText>Please look at the camera.</StatusText>}
         
         {(phase === 'scanDown' || phase === 'scanUp') && <ScanningLine direction={phase} />}
+        {phase === 'thermalHoldAfterUp' && temperature && <TemperatureDisplay>{temperature}</TemperatureDisplay>}
       </div>
 
       <style>{`
@@ -372,6 +393,25 @@ const StatusText: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     </p>
   </div>
 );
+
+// ✨ UPDATED: Component style for position and font size
+const TemperatureDisplay: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <div style={{
+        position: 'absolute',
+        top: '50%', // Center vertically
+        left: '50%',
+        transform: 'translate(-50%, -50%)', // Center horizontally
+        zIndex: 20,
+        pointerEvents: 'none',
+        color: '#ffffff',
+        fontSize: '7rem', // Increased font size
+        fontWeight: 900,
+        textShadow: '0 0 8px rgba(255, 255, 255, 0.7), 0 0 15px #00ff88, 0 0 25px #00ff88',
+    }}>
+        {children}
+    </div>
+);
+
 
 const ScanningLine: React.FC<{ direction: 'scanDown' | 'scanUp' }> = ({ direction }) => {
   return (
