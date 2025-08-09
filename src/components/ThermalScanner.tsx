@@ -93,7 +93,7 @@ const LottieCountdown: React.FC<{ onComplete: () => void }> = ({ onComplete }) =
   )
 }
 
-// Animated Temperature Display Component
+// Enhanced Animated Temperature Display Component
 const AnimatedTemperatureDisplay: React.FC<{ targetTemp: number; isVisible: boolean }> = ({
   targetTemp,
   isVisible,
@@ -143,33 +143,180 @@ const AnimatedTemperatureDisplay: React.FC<{ targetTemp: number; isVisible: bool
 
   if (!isVisible) return null
 
+  // Determine color based on temperature
+  const isHot = targetTemp >= 90
+  const tempColor = isHot ? '#ffffff' : '#ffffff'
+  const shadowColor = isHot ? '#ff4444' : '#00ff88'
+
   return (
     <div
+      className="temperature-display"
       style={{
         position: "absolute",
-        bottom: "10%", // Position at bottom
+        bottom: "15%",
         left: "50%",
-        transform: "translateX(-50%)", // Center horizontally only
+        transform: "translateX(-50%)",
         zIndex: 20,
         pointerEvents: "none",
-        color: "#ffffff",
-        fontSize: "4rem",
-        fontWeight: 900,
-        fontFamily: '"Orbitron", "Courier New", monospace', // Tech-style font
-        textShadow: "0 0 8px rgba(255, 255, 255, 0.7), 0 0 15px #00ff88, 0 0 25px #00ff88",
-        animation: "temperatureGlow 2s ease-in-out infinite alternate",
       }}
     >
-      {currentTemp.toFixed(1)}°
+      <div className="temp-container">
+        <span className="temp-value">{currentTemp.toFixed(1)}</span>
+        <span className="temp-unit">°</span>
+      </div>
+      
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
         
-        @keyframes temperatureGlow {
+        .temperature-display {
+          animation: temperatureEntrance 0.6s ease-out;
+        }
+        
+        .temp-container {
+          display: flex;
+          align-items: flex-start;
+          justify-content: center;
+          filter: drop-shadow(0 0 20px ${shadowColor});
+        }
+        
+        .temp-value {
+          font-family: 'Orbitron', 'Courier New', monospace;
+          font-size: 8rem;
+          font-weight: 900;
+          color: ${tempColor};
+          text-shadow: 
+            0 0 10px rgba(255, 255, 255, 0.8),
+            0 0 20px ${shadowColor},
+            0 0 35px ${shadowColor},
+            0 0 50px ${shadowColor};
+          animation: 
+            temperatureGlow 2s ease-in-out infinite alternate,
+            temperatureScale 3s ease-in-out infinite,
+            temperaturePulse 1.5s ease-in-out infinite;
+          letter-spacing: -0.05em;
+        }
+        
+        .temp-unit {
+          font-family: 'Orbitron', 'Courier New', monospace;
+          font-size: 5rem;
+          font-weight: 700;
+          color: ${tempColor};
+          text-shadow: 
+            0 0 8px rgba(255, 255, 255, 0.6),
+            0 0 15px ${shadowColor},
+            0 0 25px ${shadowColor};
+          animation: 
+            temperatureGlow 2s ease-in-out infinite alternate,
+            unitFloat 4s ease-in-out infinite;
+          margin-left: 0.1em;
+          margin-top: 0.2em;
+        }
+        
+        @keyframes temperatureEntrance {
           0% { 
-            textShadow: 0 0 8px rgba(255, 255, 255, 0.7), 0 0 15px #00ff88, 0 0 25px #00ff88;
+            transform: translateX(-50%) scale(0.3) translateY(50px);
+            opacity: 0;
+          }
+          50% {
+            transform: translateX(-50%) scale(1.1) translateY(-10px);
+            opacity: 0.8;
           }
           100% { 
-            textShadow: 0 0 12px rgba(255, 255, 255, 0.9), 0 0 20px #00ff88, 0 0 35px #00ff88, 0 0 45px #00ff88;
+            transform: translateX(-50%) scale(1) translateY(0);
+            opacity: 1;
+          }
+        }
+        
+        @keyframes temperatureGlow {
+          0% { 
+            text-shadow: 
+              0 0 10px rgba(255, 255, 255, 0.8),
+              0 0 20px ${shadowColor},
+              0 0 35px ${shadowColor},
+              0 0 50px ${shadowColor};
+            filter: brightness(1);
+          }
+          100% { 
+            text-shadow: 
+              0 0 15px rgba(255, 255, 255, 1),
+              0 0 30px ${shadowColor},
+              0 0 50px ${shadowColor},
+              0 0 70px ${shadowColor},
+              0 0 90px ${shadowColor};
+            filter: brightness(1.2);
+          }
+        }
+        
+        @keyframes temperatureScale {
+          0%, 100% { 
+            transform: scale(1);
+          }
+          50% { 
+            transform: scale(1.02);
+          }
+        }
+        
+        @keyframes temperaturePulse {
+          0%, 100% { 
+            opacity: 1;
+          }
+          50% { 
+            opacity: 0.9;
+          }
+        }
+        
+        @keyframes unitFloat {
+          0%, 100% { 
+            transform: translateY(0px);
+          }
+          50% { 
+            transform: translateY(-3px);
+          }
+        }
+        
+        /* Additional sparkle effect overlay */
+        .temp-container::before {
+          content: '';
+          position: absolute;
+          top: -20px;
+          left: -20px;
+          right: -20px;
+          bottom: -20px;
+          background: 
+            radial-gradient(circle at 20% 80%, ${shadowColor}22 2px, transparent 2px),
+            radial-gradient(circle at 80% 20%, ${shadowColor}22 1px, transparent 1px),
+            radial-gradient(circle at 40% 40%, ${shadowColor}11 1px, transparent 1px);
+          animation: sparkle 3s linear infinite;
+          pointer-events: none;
+        }
+        
+        @keyframes sparkle {
+          0%, 100% { 
+            opacity: 0;
+            transform: rotate(0deg);
+          }
+          50% { 
+            opacity: 1;
+            transform: rotate(180deg);
+          }
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+          .temp-value {
+            font-size: 6rem;
+          }
+          .temp-unit {
+            font-size: 4rem;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          .temp-value {
+            font-size: 5rem;
+          }
+          .temp-unit {
+            font-size: 3rem;
           }
         }
       `}</style>
